@@ -1,27 +1,27 @@
-local QBCore = nil
+QBCore = nil
 Citizen.CreateThread(function()
     while QBCore == nil do
         TriggerEvent("QBCore:GetObject", function(obj) QBCore = obj end)
     end
 end)
 
+
 local cooldown = 60
 local tick = 0
 local checkRaceStatus = false
-local insideTrackActive = false
-local gameOpen = false
-local insideTrackLocation = vector3(983.17193603516, 78.972900390625, 73.076141357422)
+
+Utils.InsideTrackActive = false
 
 local function OpenInsideTrack()
     QBCore.Functions.TriggerCallback("insidetrack:server:getbalance", function(balance)
         Utils.PlayerBalance = balance
     end)
 
-    if insideTrackActive then
+    if Utils.InsideTrackActive then
         return
     end
 
-    insideTrackActive = true
+    Utils.InsideTrackActive = true
 
     -- Scaleform
     Utils.Scaleform = RequestScaleformMovie('HORSE_RACING_CONSOLE')
@@ -33,6 +33,7 @@ local function OpenInsideTrack()
     DisplayHud(false)
     ExecuteCommand("togglehud")
     SetPlayerControl(PlayerId(), false, 0)
+    ReleaseNamedRendertarget("casinoscreen_02")
 
     while not RequestScriptAudioBank('DLC_VINEWOOD/CASINO_GENERAL') do
         Wait(0)
@@ -42,17 +43,16 @@ local function OpenInsideTrack()
     Utils:SetMainScreenCooldown(cooldown)
 
     -- Add horses
-    Utils:AddHorses()
+    Utils.AddHorses(Utils.Scaleform)
 
     Utils:DrawInsideTrack()
     Utils:HandleControls()
 end
 
 local function LeaveInsideTrack()
-    insideTrackActive = false
+    Utils.InsideTrackActive = false
 
     DisplayHud(true)
-    ExecuteCommand("togglehud")
     SetPlayerControl(PlayerId(), true, 0)
     SetScaleformMovieAsNoLongerNeeded(Utils.Scaleform)
 
@@ -61,7 +61,7 @@ end
 
 function Utils:DrawInsideTrack()
     Citizen.CreateThread(function()
-        while insideTrackActive do
+        while Utils.InsideTrackActive do
             Wait(0)
 
             local xMouse, yMouse = GetDisabledControlNormal(2, 239), GetDisabledControlNormal(2, 240)
@@ -94,11 +94,19 @@ end
 
 function Utils:HandleControls()
     Citizen.CreateThread(function()
-        while insideTrackActive do
+        while Utils.InsideTrackActive do
             Wait(0)
 
             if IsControlJustPressed(2, 194) then
                 LeaveInsideTrack()
+
+                Utils:HandleBigScreen()
+            end
+
+            if IsControlJustPressed(2, 177) then
+                LeaveInsideTrack()
+
+                Utils:HandleBigScreen()
             end
 
             -- Left click
@@ -177,14 +185,16 @@ function Utils:HandleControls()
                         StopSound(0)
 
                         if (Utils.CurrentHorse == Utils.CurrentWinner) then
+                            -- Here you can add money
+                            -- Exemple
+                            -- TriggerServerEvent('myCoolEventWhoAddMoney', Utils.CurrentGain)
+
                             TriggerServerEvent("insidetrack:server:winnings", Utils.CurrentGain)
+
+                            -- Refresh player balance
+                            Utils.PlayerBalance = (Utils.PlayerBalance + Utils.CurrentGain)
+                            Utils:UpdateBetValues(Utils.CurrentHorse, Utils.CurrentBet, Utils.PlayerBalance, Utils.CurrentGain)
                         end
-                            
-                        QBCore.Functions.TriggerCallback("insidetrack:server:getbalance", function(balance)
-                            Utils.PlayerBalance = balance
-                        end)
-                        Utils:UpdateBetValues(Utils.CurrentHorse, Utils.CurrentBet, Utils.PlayerBalance, Utils.CurrentGain)
-                
 
                         Utils:ShowResults()
 
@@ -224,7 +234,6 @@ end)
 
 RegisterCommand("+InsideTrack", function()
     if insideMarker then
-        print("yep")
         OpenInsideTrack()
     end
 end, false)

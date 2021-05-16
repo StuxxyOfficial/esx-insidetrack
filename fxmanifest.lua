@@ -1,13 +1,11 @@
 fx_version 'cerulean'
 game 'gta5'
 
-version '1.0'
-
-description 'Insidetrack casino game for qbus framework'
-
 client_scripts {
     'client/utils.lua',
+    'client/presets.lua',
     'client/client.lua',
+    'client/bigScreen.lua',
     
     'client/screens/*.lua',
 }
