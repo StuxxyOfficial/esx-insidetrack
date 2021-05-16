@@ -35,9 +35,9 @@ local function OpenInsideTrack()
     SetPlayerControl(PlayerId(), false, 0)
     ReleaseNamedRendertarget("casinoscreen_02")
 
-    while not RequestScriptAudioBank('DLC_VINEWOOD/CASINO_GENERAL') do
-        Wait(0)
-    end
+   -- while not RequestScriptAudioBank('DLC_VINEWOOD/CASINO_GENERAL') do
+   --     Wait(0)
+   -- end
 
     Utils:ShowMainScreen()
     Utils:SetMainScreenCooldown(cooldown)
@@ -221,7 +221,7 @@ Citizen.CreateThread(function()
         if dist <= 4.0 then
             Citizen.Wait(0)
             DrawMarker(2, insideTrackLocation.x, insideTrackLocation.y, insideTrackLocation.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.2, 0.1, 255, 0, 0, 155, 0, 0, 0, 1, 0, 0, 0)
-            if dist <= 1.0 and not insideTrackActive then
+            if dist <= 1.0 and not Utils.InsideTrackActive then
                 QBCore.Functions.DrawText3D(insideTrackLocation.x, insideTrackLocation.y, insideTrackLocation.z + 0.3, "[~g~E~w~] Inside Track")
                 insideMarker = true
             end
